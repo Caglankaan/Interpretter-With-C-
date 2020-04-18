@@ -1,0 +1,24 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build & debug file",
+            "type": "shell",
+            "command": "g++",            
+            "args": [         
+                "-std=c++11",
+                "-o",
+                "a.out",
+                "lexer/lexer_test.cpp",
+                "lexer/lexer.cpp",
+                "token/token.cpp",
+                "parser/parser.cpp",
+                "-w"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
