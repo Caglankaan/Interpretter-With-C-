@@ -111,6 +111,20 @@ Token nextToken(Lexer *l)
             tok.Type = STRING;
             tok.Literal = readString(l);
             break;
+        case '[':
+            tok = newToken(LBRACKET, l->ch);
+            break;
+        case ']':
+            tok = newToken(RBRACKET, l->ch);
+            break;
+        case ':':
+            tok = newToken(COLON, l->ch);
+            break;
+        /*
+        case '.':
+            //function call
+            break;
+        */
         case 0:
             tok.Literal = "";
             tok.Type = END_OF_FILE;

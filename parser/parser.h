@@ -2,13 +2,12 @@
 #define __PARSER_HEADER_
 
 #include "../ast/ast.h"
-#include "../ast/statement.h"
 #include "../lexer/lexer.h"
 #include "../token/token.h"
 #include <functional>
 #include <string>
 
-enum Precedences { LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL };
+enum Precedences { LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL, INDEX};
 
 // typedef std::function<Node(Parser *p)> prefixParseFn;
 // typedef std::function<Node(Parser *p)> infixParseFn;
@@ -58,8 +57,12 @@ Node parseExpression(Parser *p, int precedence);
 Node parseIdentifier(Parser *p);
 Node parseInteger(Parser *p);
 Node parseCallExpression(Parser *p, Node *function_identifier);
+Node parseArrayLiteral(Parser *p);
+Node parseIndexExpression(Parser *p);
+Node parseHashLiteral(Parser *p);
 
 std::vector<Node *> parseFunctionParameters(Parser *p);
 std::vector<Node *> parseCallArguments(Parser *p);
+std::vector<Node *> parseExpressionList(Parser *p, TokenType end);
 
 #endif

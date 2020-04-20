@@ -2,23 +2,36 @@
 #include "environment.h"
 
 
-bool MyEnv::Env::isObjectSetted(std::string name)
+bool MyEnv::Env::isObjectSetted(std::string name, MyEnv::Env *e)
 {
-    return store[name];
+    if(e->store[name])
+        return true;
+    return false;
 }
 
-Object *MyEnv::Env::getObject(std::string name)
+
+Object *MyEnv::Env::getObject(std::string name, MyEnv::Env* e)
 {
-    Object *myobj = store[name];
-    if(outer != NULL)
-        myobj = outer->getObject(name);
-        
-    return myobj;
+
+    if(e->store[name])
+    {
+        return e->store[name];
+    }
+    if(e->has_outer)
+    {
+        return getObject(name, e->outer);
+    }
+    
+    Object *err = new Object();
+    err->error_message = "identifier not found: " + name;
+    err->which_object = ERROR_OBJ;
+    return err;
 }
 
-void MyEnv::Env::setObject(std::string name, Object *new_object)
+
+void MyEnv::Env::setObject(std::string name, Object *new_object, Env* env)
 {
-    store[name] = new_object;
+    env->store[name] = new_object;
 }
 
 MyEnv::Env *MyEnv::newEnv()
@@ -27,12 +40,14 @@ MyEnv::Env *MyEnv::newEnv()
     std::unordered_map<std::string, Object*> store;
     env->store = store;
     env->outer = NULL;
+    env->has_outer = false;
     return env;
 }
 
 MyEnv::Env *MyEnv::newEnclosedEnv(MyEnv::Env *outer)
 {
-    MyEnv::Env *env = new MyEnv::Env();
+    MyEnv::Env *env = MyEnv::newEnv();
     env->outer = outer;
+    env->has_outer = true;
     return env;
 }

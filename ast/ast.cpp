@@ -1,10 +1,4 @@
 #include "ast.h"
-#include "statement.h"
-
-std::string Identifier::TokenLiteral()
-{
-    return token.Literal;
-}
 
 std::string Node::TokenLiteral()
 {
@@ -69,6 +63,36 @@ std::string Node::String()
             output_str += ")";
             return output_str;
         }
+        else if(which_identifier == "ArrayLiteral")
+        {
+            std::string output_str = "[";
+            for(int i = 0; i < Elements.size(); i++)
+            {
+                if(i > 0)
+                    output_str += ",";
+                output_str += Elements[i]->String();
+            }
+            output_str += "]";
+            return output_str;
+        }
+        else if(which_identifier == "IndexExpression")
+        {
+            return "(" + Left_index->String() + "[" + Index->String() + "])";
+        }
+        else if(which_identifier == "HashLiteral")
+        {
+            std::string output_str = "{";
+            int i = 0;
+            for(auto vk: Pairs)
+            {   
+                if(i > 0)
+                    output_str += ", ";
+                output_str += vk.first->String() + ":" + vk.second->String();
+                i+=1;
+            }
+            output_str += "}";
+            return output_str;
+        }
         
         return token.Literal;
     }
@@ -114,66 +138,5 @@ std::string Node::String()
     {
         return token.Literal;
     }
-    
-}
-std::string Identifier::String()
-{
-    if(which_identifier == "IntegerLiteral")
-    {
-        return token.Literal;
-    }
-    else if(which_identifier == "PrefixExpression")
-    {
-        if(Operator == "")
-        {
-            return token.Literal;
-        }
-        return "("+Operator+Right->String()+")";
-    }
-    else if(which_identifier == "InfixExpression")
-    {
-        return "("+Left->String()+" "+Operator+" "+Right->String()+")";
-    }
-    else if(which_identifier == "Boolean")
-    {
-        return token.Literal;
-    }
-    else if(which_identifier == "IfExpression")
-    {
-        std::string return_if ="if" + Condition->String() + " " + Consequence->String();
-        if(Alternative != NULL)
-        {
-            return_if += "else " + Alternative->String();
-        }
-
-        return return_if;
-    }
-    else if(which_identifier == "FunctionLiteral")
-    {
-        std::string output_str = TokenLiteral()+"(";
-        for(int i = 0; i < parameters.size(); i++)
-        {
-            if(i > 0)
-                output_str += ",";
-            output_str += parameters[i]->String();
-        }
-        output_str += ") " +Body->String();
-
-        return output_str; 
-    }
-    else if(which_identifier == "CallExpression")
-    {
-
-        std::string output_str = Function->String() + "(";
-        for(int i = 0; i < Arguments.size(); i++)
-        {
-             if(i > 0)
-                output_str += ",";
-            output_str += Arguments[i]->String();
-        }
-        output_str += ")";
-        return output_str;
-    }
-    return token.Literal;
     
 }

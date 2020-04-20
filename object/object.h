@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <functional>
 #include "../token/token.h"
 #include "../ast/ast.h"
 #include "../environment/environment.h"
@@ -15,8 +16,11 @@
 #define FUNCTION_OBJ "FUNCTION"
 #define STRING_OBJ "STRING"
 #define BUILTIN_OBJ "BUILTIN"
+#define ARRAY_OBJ "ARRAY"
+#define HASH_OBJ "HASH"
 
 typedef std::string ObjectType;
+//typedef std::function<Object(std::vector<Object *>)> BultinFunction;
 
 class Env;
 
@@ -32,9 +36,16 @@ class Object
         std::vector<Node *> parameters;
         Node *body;
         MyEnv::Env *env;
+        std::vector<Object *> elements;
+        ObjectType type;
+        int value_hash_int;
+        Object *Key;
+        std::unordered_map<Object*, Object*> HashPair;
 
         std::string Inspect(Object *o);
 };
 
+
+Object *HashKey(Object *key);
 
 #endif

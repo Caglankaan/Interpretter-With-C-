@@ -1,7 +1,7 @@
 #include "parser.h"
 
 std::unordered_map<TokenType, int> unordered_precedences = {{EQ,EQUALS},{NOT_EQ,EQUALS},{LT,LESSGREATER},{GT,LESSGREATER},
-                                        {PLUS,SUM},{MINUS,SUM},{SLASH,PRODUCT},{ASTERISK,PRODUCT}, {LPAREN, CALL}};
+                                        {PLUS,SUM},{MINUS,SUM},{SLASH,PRODUCT},{ASTERISK,PRODUCT}, {LPAREN, CALL}, {LBRACKET, INDEX}};
 
 
 void nextToken(Parser *p)
@@ -96,11 +96,9 @@ Node parseIdentifier(Parser *p)
 Node parseExpression(Parser *p, int precedence)
 {
     Node (*prefix)(Parser *p);
-    Node (*infix)(Parser *p, Identifier *left);
     Node defaultIdentifier;
     std::function<Node(Parser *p)> prefix_func_ptr;
     std::function<Node(Parser *p, Node *left)> infix_func_ptr;
-    int leftexp;
     if(p->prefixParseFns[p->curToken.Type])
     {
         prefix_func_ptr = p->prefixParseFns[p->curToken.Type];
@@ -181,7 +179,6 @@ Node parseBoolean(Parser *p)
 
 Node parseGroupExpression(Parser *p)
 {
-    std::cout << "parsegroupexpression a mi giriyor\n";
     nextToken(p);
 
     Node i = parseExpression(p,LOWEST);
@@ -338,7 +335,7 @@ Node parseCallExpression(Parser *p, Node *function)
     Node *i = new Node();
     i->token = p->curToken;
     i->Function_identifier = function;
-    i->Arguments_identifier = parseCallArguments(p);
+    i->Arguments_identifier = parseExpressionList(p, RPAREN);
     i->which_identifier = "CallExpression";
     i->node_type = "Identifier";
     return *i;
@@ -377,6 +374,110 @@ std::vector<Node *> parseCallArguments(Parser *p)
 
     return args;
 }
+std::vector<Node *> parseExpressionList(Parser *p, TokenType end)
+{
+    std::vector<Node *> array;
+    std::vector<Node *> array_null;
+    std::vector<Node *> *id = &array_null;
+    id = NULL;
+    if(peekTokenIs(p, end))
+    {
+        nextToken(p);
+        return array;
+    }
+    nextToken(p);
+    Node *newNode = new Node(parseExpression(p,LOWEST));
+    array.push_back(newNode);
+
+    while(peekTokenIs(p, COMMA))
+    {
+        nextToken(p);
+        nextToken(p);
+        Node *newNode = new Node(parseExpression(p,LOWEST));    
+        array.push_back(newNode);
+    }
+
+    if(!expectPeek(p, end))
+    {
+        return array_null;
+    }
+
+    return array;
+}
+
+Node parseIndexExpression(Parser *p, Node *left)
+{
+    Node index_null;
+    Node *id = &index_null;
+    id = NULL;
+
+
+    Node *index = new Node();
+    index->token = p->curToken;
+    index->Left_index = left;
+    index->node_type = "Identifier";
+    index->which_identifier = "IndexExpression";
+    
+    nextToken(p);
+
+    index->Index = new Node(parseExpression(p, LOWEST));
+    //index->Index->which_identifier = "IndexExpression";
+
+    if(!expectPeek(p, RBRACKET))
+    {
+        return index_null;
+    }
+    
+    return *index;
+}
+
+Node parseArrayLiteral(Parser *p)
+{
+    Node *array = new Node();
+    array->token = p->curToken;
+    array->node_type = "Identifier";
+    array->which_identifier = "ArrayLiteral";
+    array->Elements = parseExpressionList(p, RBRACKET);
+
+    return *array;
+}
+
+Node parseHashLiteral(Parser *p)
+{
+    Node *hash = new Node();
+    hash->token = p->curToken;
+    hash->node_type = "Identifier";
+    hash->which_identifier = "HashLiteral";
+
+    Node hash_null;
+    Node *id = &hash_null;
+    id = NULL;
+
+    
+    while(!peekTokenIs(p, RBRACE))
+    {
+        nextToken(p);
+        Node *key = new Node(parseExpression(p, LOWEST));
+
+        if(!expectPeek(p, COLON))
+        {
+            return hash_null;
+        }
+        nextToken(p);
+        Node *value = new Node(parseExpression(p, LOWEST));
+        hash->Pairs[key] = value;
+
+        if(!peekTokenIs(p, RBRACE) && !expectPeek(p, COMMA))
+            return hash_null;
+    }
+
+    if(!expectPeek(p, RBRACE))
+    {
+        return hash_null;
+    }
+
+    return *hash;
+}
 
 Node parseStringLiteral(Parser *p)
 {
@@ -406,6 +507,9 @@ Parser *New(Lexer *l)
     Node (*parseFunctionLiteralPtr)(Parser *p);
     Node (*parseCallExpressionPtr)(Parser *p, Node *function);
     Node (*parseStringLiteralPtr)(Parser *p);
+    Node (*parseArrayLiteralPtr)(Parser *p);
+    Node (*parseIndexExpressionPtr)(Parser *p, Node *left);
+    Node (*parseHashLiteralPtr)(Parser *p);
 
     parseIdentifierPtr = &parseIdentifier;
     parseIntegerPtr = &parseInteger;
@@ -417,6 +521,9 @@ Parser *New(Lexer *l)
     parseFunctionLiteralPtr = &parseFunctionLiteral;
     parseCallExpressionPtr = &parseCallExpression;
     parseStringLiteralPtr = &parseStringLiteral;
+    parseArrayLiteralPtr = &parseArrayLiteral;
+    parseIndexExpressionPtr = &parseIndexExpression;
+    parseHashLiteralPtr = &parseHashLiteral;
 
 	registerPrefix(p,IDENT, parseIdentifierPtr);
 	registerPrefix(p,INT, parseIntegerPtr);
@@ -429,6 +536,9 @@ Parser *New(Lexer *l)
     registerPrefix(p, IF, parseIfExpressionPtr);
     registerPrefix(p, FUNCTION, parseFunctionLiteralPtr);
     registerPrefix(p, STRING, parseStringLiteralPtr);
+    registerPrefix(p, LBRACKET, parseArrayLiteralPtr);
+    registerPrefix(p, LBRACE, parseHashLiteralPtr);
+    
 
     registerInfix(p, PLUS, parseInfixExpressionPtr);
     registerInfix(p, MINUS, parseInfixExpressionPtr);
@@ -439,6 +549,7 @@ Parser *New(Lexer *l)
     registerInfix(p, LT, parseInfixExpressionPtr);
     registerInfix(p, GT, parseInfixExpressionPtr);
     registerInfix(p, LPAREN, parseCallExpressionPtr);
+    registerInfix(p, LBRACKET, parseIndexExpressionPtr);
 
 
     nextToken(p);

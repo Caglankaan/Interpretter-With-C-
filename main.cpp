@@ -1,3 +1,4 @@
+#include "evaluator/builtins.h"
 #include "token/token.h"
 #include "lexer/lexer.h"
 #include "parser/parser.h"
@@ -17,8 +18,23 @@ void printParserErrors(std::vector<std::string> errors)
 
 int main()
 {
+    /*
+void registerBuiltinFunctions(std::string func_name, std::function<Object(std::vector<Object *>)> function)
+
+Object builtinLenFunc(std::vector<Object *> arguments)
+    */
     std::string scan;
-    std::cout << "Welcome to the ---- language\n";
+    std::cout << "Welcome to the ___ language\n";
+    
+    Object (*lenFuncPtr)(std::vector<Object *> arguments);
+    lenFuncPtr = &builtinLenFunc;
+    registerBuiltinFunctions("len", lenFuncPtr);
+
+
+    Object (*pushFuncPtr)(std::vector<Object *> arguments);
+    pushFuncPtr = &builtinPushFunc;
+    registerBuiltinFunctions("push", pushFuncPtr);
+
     MyEnv::Env *env = MyEnv::newEnv();
     while(true)
     {
@@ -35,10 +51,15 @@ int main()
             continue;
         }
         Object *evaluated = Eval(program, env);
-        if(evaluated->which_object  != "Null" && evaluated->which_object != "")
+        if(evaluated->which_object == STRING_OBJ || evaluated->which_object == INTEGER_OBJ || evaluated->which_object == RETURN_VALUE_OBJ
+        || evaluated->which_object == ERROR_OBJ || evaluated->which_object == BOOLEAN_OBJ || evaluated->which_object == ARRAY_OBJ)
         {
             std::string return_str = evaluated->Inspect(evaluated);
             std::cout << return_str << "\n";
+        }
+        else if(evaluated->which_object == NULL_OBJ)
+        {
+            std::cout << "null" << "\n";
         }
     }
 }

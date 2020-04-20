@@ -1,6 +1,4 @@
 #include "evaluator.h"
-#include "../object/object.h"
-#include "../environment/environment.h"
 
 Object *boolean_obj = new Object();
 Object *null_obj = new Object();
@@ -56,6 +54,7 @@ Object *evalMinusPrefixOperatorExpression(Object *right)
         return newErrorPrefix("-",right->which_object);
     }
     Object *val = new Object();
+    val->which_object = INTEGER_OBJ;
     val->Value_int = -right->Value_int;
 }
 
@@ -67,6 +66,7 @@ Object *evalStringInfixExpression(std::string op, Object *left, Object *right)
     }
 
     Object *str = new Object();
+    str->which_object = STRING_OBJ;
     str->Value_string = left->Value_string+right->Value_string;
     return str;
 }
@@ -224,14 +224,114 @@ Object *newErrorFunction(std::string nodeType)
     err->which_object = ERROR_OBJ;
     return err;
 }
+Object *newErrorIndex(std::string nodeType)
+{
+    Object *err = new Object();
+    err->error_message = "index operator not supported: " + nodeType;
+    err->which_object = ERROR_OBJ;
+    return err;
+}
+
+Object *newErrorOutOfRange()
+{
+    Object *err = new Object();
+    err->error_message = "index out of range";
+    err->which_object = ERROR_OBJ;
+    return err;
+}
+
+Object *evalArrayIndexExpression(Object *arr, Object *index)
+{
+    int indx = index->Value_int;
+    int max = arr->elements.size() -1;
+
+    if(indx < 0 || indx > max)
+    {
+        Object *nullobj = new Object();
+        null_obj->which_object = NULL_OBJ;
+        return null_obj;
+    }
+        
+    return arr->elements[indx];
+}
+
+
+Object *evalHashLiteral(Node *node, MyEnv::Env *env)
+{
+    std::unordered_map<Object*, Object* > pairs;
+    for(auto vk: node->Pairs)
+    {
+        Object *key = new Object();
+        key = Eval(vk.first, env);
+        if(isError(key))
+        {
+            return key;
+        }
+        if(key->which_object != STRING_OBJ && key->which_object != INTEGER_OBJ)
+        {
+            std::cout << "unusabla as hash key !!! " << key->which_object << "\n";
+        }
+
+        Object *value = new Object();
+        value = Eval(vk.second, env);
+        if(isError(value))
+        {
+            return value;
+        }
+        Object *hashed = new Object();
+        hashed = HashKey(key);
+
+        Object *hash_pair = new Object();
+        hash_pair->Key = key;
+        hash_pair->Value_object = value;
+
+        pairs[hashed] = hash_pair;
+    }
+
+    Object *returnObj = new Object();
+    returnObj->HashPair = pairs;
+    returnObj->which_object = HASH_OBJ;
+    return returnObj;
+}
+
+Object *evalHashIndexExpression(Object *left, Object* index)
+{
+    std::cout << left->which_object << "\n";
+    std::cout << index->which_object << "\n";
+
+    Object *myobj = HashKey(HashKey(index));
+    Object *retrn = left->HashPair[myobj];
+    return retrn->Value_object;
+    return left->HashPair[HashKey(index)]->Value_object;// sorunlu
+}
+
+Object *evalIndexExpression(Object *left, Object *index)
+{
+    if(left->which_object == ARRAY_OBJ && index->which_object == INTEGER_OBJ)
+    {
+        return evalArrayIndexExpression(left, index);
+    }
+    else if(left->which_object == HASH_OBJ)
+    {
+        return evalHashIndexExpression(left, index);
+    }
+
+    return newErrorIndex(left->which_object);
+}
 
 Object *evalIdentifier(Node *p, MyEnv::Env *env)
 {
-    if(env->isObjectSetted(p->Value))
+    if(!env->store[p->Value])
     {
-        return env->getObject(p->Value);
+        if(builtin_functions[p->Value])
+        {
+            //std::vector<Object *> arg_array;
+            //arg_array.push_back(new Object());
+            //Object *returnObj = new Object(builtin_functions[p->Value](arg_array));
+            //return returnObj;
+        }
     }
-    return newErrorIdentifier(p->Value);
+    return env->getObject(p->Value, env);
 }
 
 std::vector<Object *> evalExpressions(std::vector<Node *> args, MyEnv::Env *env)
@@ -244,7 +344,7 @@ std::vector<Object *> evalExpressions(std::vector<Node *> args, MyEnv::Env *env)
         if(isError(result))
         {
             results.clear();
-            results.push_back(result);
+            //results.push_back(result);  //buraya bakilacak
             return results;
         }
         results.push_back(result);
@@ -256,7 +356,7 @@ MyEnv::Env *extendedFunctionEnv(Object *fun, std::vector<Object *> args)
     MyEnv::Env *env = MyEnv::newEnclosedEnv(fun->env);
     for(int i = 0; i < fun->parameters.size(); i++)
     {
-        env->setObject(fun->parameters[i]->Value, args[i]);
+        env->setObject(fun->parameters[i]->Value, args[i], env);
     }
 
     return env;
@@ -272,12 +372,13 @@ Object *unwrapReturnValue(Object *obj)
 
 Object *applyFunction(Object *fun, std::vector<Object *> args)
 {
-    if(fun->which_object != FUNCTION_OBJ){
-        return newErrorFunction(fun->which_object);
+    if(fun->which_object == FUNCTION_OBJ)
+    {
+        MyEnv::Env *extendedEnv = extendedFunctionEnv(fun, args);
+        Object *evaluated = Eval(fun->body, extendedEnv);
+        return unwrapReturnValue(evaluated);
     }
-    MyEnv::Env *extendedEnv = extendedFunctionEnv(fun, args);
-    Object *evaluated = Eval(fun->body, extendedEnv);
-    return unwrapReturnValue(evaluated);
+    return newErrorFunction(fun->which_object);
 }
 
 Object *Eval(Node *p, MyEnv::Env *env)
@@ -307,7 +408,7 @@ Object *Eval(Node *p, MyEnv::Env *env)
             Object *val = Eval(p->Value_identifier, env);
             if(isError(val))
                 return val;
-            env->setObject(p->Name_identifier->Value, val);
+            env->setObject(p->Name_identifier->Value, val, env);
         }
     }
     else if(p->node_type == "Identifier")
@@ -351,10 +452,17 @@ Object *Eval(Node *p, MyEnv::Env *env)
             fun->parameters = p->Parameters_identifier;
             fun->body = p->Body_statement;
             fun->which_object = FUNCTION_OBJ;
+            fun->env = env;
             return fun;
         }
         else if(p->which_identifier == "CallExpression")
         {
+            if(builtin_functions[p->Function_identifier->Value])
+            {
+                std::vector<Object *> args = evalExpressions(p->Arguments_identifier, env);
+                Object *returnObj = new Object(builtin_functions[p->Function_identifier->Value](args));
+                return returnObj;
+            }
             Object *fun = Eval(p->Function_identifier, env);
             if(isError(fun))
                 return fun;
@@ -373,7 +481,35 @@ Object *Eval(Node *p, MyEnv::Env *env)
             str->which_object = STRING_OBJ;
             return str;
         }
+        else if(p->which_identifier == "ArrayLiteral")
+        {
+            std::vector<Object *> elements = evalExpressions(p->Elements, env);
+            if(elements.size() == 1 && isError(elements[0]))
+                return elements[0];
+            Object *arr = new Object();
+            arr->elements = elements;
+            arr->which_object = ARRAY_OBJ;
 
+            return arr;
+        }
+        else if(p->which_identifier == "IndexExpression")
+        {
+            Object *left =  Eval(p->Left_index, env);
+            if(isError(left))
+            {
+                return left;
+            }
+            Object *index =  Eval(p->Index, env);
+            if(isError(index))
+            {
+                return index;
+            }
+            return evalIndexExpression(left, index);
+        }
+        else if(p->which_identifier == "HashLiteral")
+        {
+            return evalHashLiteral(p, env);
+        }
         else if(p->which_identifier == "")
         {
             return evalIdentifier(p, env);

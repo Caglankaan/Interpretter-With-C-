@@ -18,6 +18,7 @@
 #define BANG "!"
 #define ASTERISK "*"
 #define SLASH "/"
+#define COLON ":"
 
 #define LT "<"
 #define GT ">"
@@ -29,6 +30,8 @@
 #define COMMA ","
 #define SEMICOLON ";"
 
+#define LBRACKET "["
+#define RBRACKET "]"
 #define LPAREN "("
 #define RPAREN ")"
 #define LBRACE "{"

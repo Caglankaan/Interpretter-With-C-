@@ -13,11 +13,12 @@ namespace MyEnv
         public:
             std::unordered_map<std::string, Object*> store;
             Env *outer;
+            bool has_outer;
 
 
-            bool isObjectSetted(std::string name);
-            Object *getObject(std::string name);
-            void setObject(std::string name, Object *new_object);
+            bool isObjectSetted(std::string name, MyEnv::Env *e);
+            Object *getObject(std::string name, Env* e);
+            void setObject(std::string name, Object *new_object, Env* env);
             
     };
 
