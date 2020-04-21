@@ -4,11 +4,11 @@ std::string Object::Inspect(Object *o)
 {
     if(o->which_object == INTEGER_OBJ)
     {
-        return std::to_string(o->Value_int);
+        return std::to_string((long) o->Value);
     }
     else if(o->which_object == BOOLEAN_OBJ)
     {
-        return std::to_string(o->Value_bool);
+        return std::to_string((bool)o->Value);
     }
     else if(o->which_object == NULL_OBJ)
     {
@@ -16,7 +16,7 @@ std::string Object::Inspect(Object *o)
     }
     else if(o->which_object == RETURN_VALUE_OBJ)
     {
-        return Inspect(Value_object);
+        return Inspect((Object* )Value);
     }
     else if(o->which_object == ERROR_OBJ)
     {
@@ -36,7 +36,8 @@ std::string Object::Inspect(Object *o)
     }
     else if(o->which_object == STRING_OBJ)
     {
-        return o->Value_string;
+        char *val = (char*) o->Value;
+        return std::string(val);
     }
     else if(o->which_object == BUILTIN_OBJ)
     {
@@ -62,8 +63,8 @@ std::string Object::Inspect(Object *o)
         {
             if(i > 0)
                 el+=", ";
-            el += vk.first->Inspect(vk.first) + ":" + vk.second->Inspect(vk.second);
-            i+=1;
+            el += vk.second->Key->Inspect(vk.second->Key) + ":" + vk.second->Inspect((Object* )vk.second->Value);
+            i+=1;    
         }
         el +="}";
         return el;
@@ -71,20 +72,45 @@ std::string Object::Inspect(Object *o)
     
 }
 
-Object *HashKey(Object *key)
+HashKeyClass GetHashKey(Object *key)
 {
+    
     if(key->which_object == INTEGER_OBJ)
     {
-        Object *hash_key = new Object();
-        hash_key->type = INTEGER_OBJ;
-        hash_key->value_hash_int = key->Value_int;
-        return hash_key;
+        HashKeyClass *hash_key = new HashKeyClass();
+        hash_key->Type = INTEGER_OBJ;
+        hash_key->Value = (long)key->Value;
+        
+        return *hash_key;
     }
-    //else this is stringobject for sure
-        Object *hash_key = new Object();
-        hash_key->type = STRING_OBJ;
-        hash_key->Value_string = key->Value_string;
-        return hash_key;
+    
+    HashKeyClass *hash_key = new HashKeyClass();
+    hash_key->Type = STRING_OBJ;
+    std::string key_val = std::string((char*)key->Value);
+    std::size_t str_hash = std::hash<std::string>{}(std::string((char *)key->Value));
+    hash_key->Value = static_cast<long>(str_hash);
 
+    return *hash_key;
+    
 }
 
+void setValStr(Object *obj, std::string &val)
+{
+    obj->Value = (void*)val.c_str();
+}
+void setValStr(Object *obj, char* val)
+{
+    obj->Value = (void*)val;
+}
+void setValLong(Object *obj, long &val)
+{
+    obj->Value = (void* )val;
+}
+void setValBool(Object *obj, bool &val)
+{
+    obj->Value = (void* )val;
+}
+void setValObj(Object *obj, Object *val_obj)
+{
+    obj->Value = (void *)val_obj;
+}

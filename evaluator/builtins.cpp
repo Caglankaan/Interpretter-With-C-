@@ -17,14 +17,19 @@ Object builtinLenFunc(std::vector<Object *> arguments)
         {
             Object *lenFunc = new Object();
             lenFunc->which_object = INTEGER_OBJ;
-            lenFunc->Value_int = arguments[0]->Value_string.size();
+            long size = sizeof((char *)arguments[0]->Value)/sizeof(char);
+            std::cout << "girdi buraya size: " << size << "\n";
+            setValLong(lenFunc, size );
+            
             return *lenFunc;
         }
         else if(arguments[0]->which_object == ARRAY_OBJ)
         {
             Object *lenFunc = new Object();
             lenFunc->which_object = INTEGER_OBJ;
-            lenFunc->Value_int = arguments[0]->elements.size();
+            
+            long vallong = arguments[0]->elements.size();
+            setValLong(lenFunc, vallong);
             return *lenFunc;
         }
         else
@@ -53,7 +58,17 @@ Object builtinPushFunc(std::vector<Object *> arguments)
             {
                 Object *new_obj = new Object();
                 new_obj->which_object = STRING_OBJ;
-                new_obj->Value_string = arguments[1]->Value_string;
+
+                setValStr(new_obj, (char *)arguments[1]->Value);
+                arguments[0]->elements.push_back(new_obj);
+            }
+            else if(arguments[1]->which_object == INTEGER_OBJ)
+            {
+                Object *new_obj = new Object();
+                new_obj->which_object = INTEGER_OBJ;
+                long arg = (long)arguments[1]->Value;
+
+                setValLong(new_obj, arg);
                 arguments[0]->elements.push_back(new_obj);
             }
             else if(arguments[1]->which_object == ARRAY_OBJ)
@@ -63,18 +78,14 @@ Object builtinPushFunc(std::vector<Object *> arguments)
                 new_obj->elements = arguments[1]->elements;
                 arguments[0]->elements.push_back(new_obj);
             }
-            else if(arguments[1]->which_object == INTEGER_OBJ)
-            {
-                Object *new_obj = new Object();
-                new_obj->which_object = INTEGER_OBJ;
-                new_obj->Value_int = arguments[1]->Value_int;
-                arguments[0]->elements.push_back(new_obj);
-            }
+            
             else if(arguments[1]->which_object == BOOLEAN_OBJ)
             {
                 Object *new_obj = new Object();
                 new_obj->which_object = BOOLEAN_OBJ;
-                new_obj->Value_bool = arguments[1]->Value_bool;
+
+                bool arg = (long)arguments[1]->Value;
+                setValBool(new_obj, arg);
                 arguments[0]->elements.push_back(new_obj);
 
             }

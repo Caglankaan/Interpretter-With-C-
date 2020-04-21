@@ -24,15 +24,36 @@ typedef std::string ObjectType;
 
 class Env;
 
+class HashKeyClass
+{
+    public:
+        ObjectType Type;
+        long Value;
+
+        bool operator==(const HashKeyClass& m) const
+        {
+            bool xd = Type == m.Type && Value == m.Value;
+            //std::cout << "buna mi giriyo ya, xd: " << xd << "\n";
+            return xd;
+        }
+};
+
+class MyHashFunction
+{
+    public:
+        size_t operator()(const HashKeyClass& m) const
+        {
+            //std::cout << "yoksa buraya mı giriyo la\n";
+            return m.Value + m.Type.length();
+        }
+};
+
 class Object
 {
     public:
         std::string which_object;
         std::string error_message;
-        std::string Value_string;
-        int Value_int;
-        bool Value_bool;
-        Object *Value_object;
+        void *Value;
         std::vector<Node *> parameters;
         Node *body;
         MyEnv::Env *env;
@@ -40,12 +61,16 @@ class Object
         ObjectType type;
         int value_hash_int;
         Object *Key;
-        std::unordered_map<Object*, Object*> HashPair;
+        std::unordered_map<HashKeyClass, Object*, MyHashFunction> HashPair;
 
         std::string Inspect(Object *o);
 };
 
-
-Object *HashKey(Object *key);
+void setValStr(Object *obj, std::string &val);
+void setValStr(Object *obj, char* val);
+void setValLong(Object *obj, long &val);
+void setValBool(Object *obj, bool &val);
+void setValObj(Object *obj, Object *val_obj);
+HashKeyClass GetHashKey(Object *key);
 
 #endif

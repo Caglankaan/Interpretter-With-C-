@@ -322,8 +322,8 @@ void TestFunctionalLiteralParsing()
 
     checkParserErrors(p);
 
-    testLiteralExpression(program->Statements_program[0]->Expression_identifier->Parameters_identifier[0],"x");
-    testLiteralExpression(program->Statements_program[0]->Expression_identifier->Parameters_identifier[1],"y");
+    testLiteralExpression(program->Statements_program[0]->Expression_identifier->Node_array[0],"x");
+    testLiteralExpression(program->Statements_program[0]->Expression_identifier->Node_array[1],"y");
 
     testInfixExpression(program->Statements_program[0]->Expression_identifier->Body_statement->Expression_identifier, "x","+","y");
 }
@@ -343,7 +343,7 @@ void TestFunctionParameterParsing()
 
         for(int i = 0; i < expected_params.size();i++)
         {
-            testLiteralExpression(program->Statements_program[0]->Expression_identifier->Parameters_identifier[i], expected_params[j][i]);
+            testLiteralExpression(program->Statements_program[0]->Expression_identifier->Node_array[i], expected_params[j][i]);
         }
     }
 }
@@ -364,13 +364,13 @@ void TestCallExpressionParsing()
     }
 
 
-    if(program->Statements_program[0]->Expression_identifier->Arguments_identifier.size() != 3)
+    if(program->Statements_program[0]->Expression_identifier->Node_array.size() != 3)
     {
-        std::cout << "Args size is not 3, is: " << program->Statements_program[0]->Expression_identifier->Arguments_identifier.size() << " something wrong!\n";
+        std::cout << "Args size is not 3, is: " << program->Statements_program[0]->Expression_identifier->Node_array.size() << " something wrong!\n";
     }
-    testLiteralExpression(program->Statements_program[0]->Expression_identifier->Arguments_identifier[0], "1");
-    testInfixExpression(program->Statements_program[0]->Expression_identifier->Arguments_identifier[1],"2","*","3");
-    testInfixExpression(program->Statements_program[0]->Expression_identifier->Arguments_identifier[2], "4","+","5");
+    testLiteralExpression(program->Statements_program[0]->Expression_identifier->Node_array[0], "1");
+    testInfixExpression(program->Statements_program[0]->Expression_identifier->Node_array[1],"2","*","3");
+    testInfixExpression(program->Statements_program[0]->Expression_identifier->Node_array[2], "4","+","5");
 }   
 
 void TestReturnStatement()

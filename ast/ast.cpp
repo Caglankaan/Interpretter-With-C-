@@ -41,11 +41,11 @@ std::string Node::String()
         else if(which_identifier == "FunctionLiteral")
         {
             std::string output_str = TokenLiteral()+"(";
-            for(int i = 0; i < Parameters_identifier.size(); i++)
+            for(int i = 0; i < Node_array.size(); i++)
             {
                 if(i > 0)
                     output_str += ",";
-                output_str += Parameters_identifier[i]->String();
+                output_str += Node_array[i]->String();
             }
             output_str += ") " +Body_statement->String();
 
@@ -54,11 +54,11 @@ std::string Node::String()
         else if(which_identifier == "CallExpression")
         {
             std::string output_str = Function_identifier->String() + "(";
-            for(int i = 0; i < Arguments_identifier.size(); i++)
+            for(int i = 0; i < Node_array.size(); i++)
             {
                 if(i > 0)
                     output_str += ",";
-                output_str += Arguments_identifier[i]->String();
+                output_str += Node_array[i]->String();
             }
             output_str += ")";
             return output_str;
@@ -66,11 +66,11 @@ std::string Node::String()
         else if(which_identifier == "ArrayLiteral")
         {
             std::string output_str = "[";
-            for(int i = 0; i < Elements.size(); i++)
+            for(int i = 0; i < Node_array.size(); i++)
             {
                 if(i > 0)
                     output_str += ",";
-                output_str += Elements[i]->String();
+                output_str += Node_array[i]->String();
             }
             output_str += "]";
             return output_str;
@@ -113,7 +113,7 @@ std::string Node::String()
         else if(which_statement == "BlockStatement")
         {
             std::string return_str;
-            for(auto statement: Statements_statement)
+            for(auto statement: Node_array)
             {
                 return_str += statement->String();
             }
@@ -128,7 +128,7 @@ std::string Node::String()
     else if(node_type == "Program")
     {
         std::string my_str;
-        for(auto& statement: Statements_program)
+        for(auto& statement: Node_array)
         {
             my_str = my_str + statement->String() + "\n";
         }

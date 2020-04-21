@@ -14,14 +14,18 @@ bool isError(Object *obj)
 
 Object *boolObject(bool input)
 {
-    boolean_obj->Value_bool = input;
+    bool set = input;
+    
+    //boolean_obj->Value_bool = input;
+    setValBool(boolean_obj, input);
     boolean_obj->which_object = BOOLEAN_OBJ;
     return boolean_obj;
 }
 
 bool isTruthy(Object *obj)
 {
-    if(obj->Value_bool)
+    //if(obj->Value_bool)
+    if((bool)obj->Value)
         return 1;
     return 0;
 }
@@ -36,11 +40,12 @@ Object *evalBangOperatorExpression(Object *right)
 {
     if(right->which_object == NULL_OBJ)
     {
-        return boolObject(false);
+        return boolObject(true);
     }
     else if(right->which_object == BOOLEAN_OBJ)
     {
-        if(right->Value_bool)
+        //if(right->Value_bool)
+        if((bool)right->Value)
             return boolObject(false);
         return boolObject(true);
     }
@@ -55,7 +60,9 @@ Object *evalMinusPrefixOperatorExpression(Object *right)
     }
     Object *val = new Object();
     val->which_object = INTEGER_OBJ;
-    val->Value_int = -right->Value_int;
+    //val->Value_int = -right->Value_int;
+    long right_value = (long)right->Value;
+    val->Value = (void *) -right_value;
 }
 
 Object *evalStringInfixExpression(std::string op, Object *left, Object *right)
@@ -67,7 +74,9 @@ Object *evalStringInfixExpression(std::string op, Object *left, Object *right)
 
     Object *str = new Object();
     str->which_object = STRING_OBJ;
-    str->Value_string = left->Value_string+right->Value_string;
+    //str->Value_string = left->Value_string+right->Value_string;
+    std::string leftplusright = std::string((char*) left->Value) + std::string((char*) right->Value);
+    setValStr(str, leftplusright);
     return str;
 }
 
@@ -76,49 +85,55 @@ Object *evalIntegerInfixExpression(std::string op, Object *left, Object *right)
 
     Object *val = new Object();
     val->which_object = INTEGER_OBJ;
+    long total_value;
+
     if(op == "+")
     {
-        val->Value_int = left->Value_int + right->Value_int;
+        total_value = (long)left->Value + (long)right->Value;
+        setValLong(val, total_value);
         return val;
     }
     else if(op == "-")
     {
-        val->Value_int = left->Value_int - right->Value_int;
+        total_value = (long)left->Value - (long)right->Value;
+        setValLong(val, total_value);
         return val;
     }
     else if(op == "*")
     {
-        val->Value_int = left->Value_int * right->Value_int;
+        total_value = (long)left->Value * (long)right->Value;
+        setValLong(val, total_value);
         return val;
     }
     else if(op == "/")
     {
-        val->Value_int = left->Value_int / right->Value_int;
+        total_value = (long)left->Value / (long)right->Value;
+        setValLong(val, total_value);
         return val;
     }
     else if(op == "<")
     {
-        return boolObject(left->Value_int < right->Value_int);
+        return boolObject((long)left->Value < (long)right->Value);
     }
     else if(op == "==")
     {
-        return boolObject(left->Value_int == right->Value_int);
+        return boolObject((long)left->Value == (long)right->Value);
     }
     else if(op == "!=")
     {
-        return boolObject(left->Value_int != right->Value_int);
+        return boolObject((long)left->Value != (long)right->Value);
     }
     else if(op == ">")
     {
-        return boolObject(left->Value_int > right->Value_int);
+        return boolObject((long)left->Value > (long)right->Value);
     }
     else if(op == "<=")
     {
-        return boolObject(left->Value_int <= right->Value_int);
+        return boolObject((long)left->Value <= (long)right->Value);
     }
     else if(op == ">=")
     {
-        return boolObject(left->Value_int >= right->Value_int);
+        return boolObject((long)left->Value >= (long)right->Value);;
     }
     return newErrorInfix(left->which_object, op, right->which_object);
 }
@@ -135,11 +150,11 @@ Object *evalInfixExpression(std::string op, Object *left, Object *right)
     }
     else if(op == "==")
     {
-        return boolObject(left == right);
+        return boolObject(left == right); //this probably returns false all the time.
     }
     else if(op == "!=")
     {
-        return boolObject(left != right);
+        return boolObject(left != right);//this probably returns false all the time.
     }
     return newErrorInfix(left->which_object, op, right->which_object);
 }
@@ -169,11 +184,11 @@ Object *evalIfExpression(Node *if_expression, MyEnv::Env *env)
 Object *evalProgram(Node *p, MyEnv::Env *env)
 {
     Object *result = new Object();
-    for(int i = 0; i < p->Statements_program.size(); i++)
+    for(int i = 0; i < p->Node_array.size(); i++)
     {
-        result = Eval(p->Statements_program[i], env);
+        result = Eval(p->Node_array[i], env);
         if(result->which_object == RETURN_VALUE_OBJ)
-            return result->Value_object;
+            return (Object *)result->Value;
         if(result->which_object == ERROR_OBJ)
             return result;
     }
@@ -183,9 +198,9 @@ Object *evalProgram(Node *p, MyEnv::Env *env)
 Object *evalBlockStatement(Node *p, MyEnv::Env *env)
 {
     Object *result = new Object();
-    for(int i = 0; i < p->Statements_statement.size(); i++)
+    for(int i = 0; i < p->Node_array.size(); i++)
     {
-        result = Eval(p->Statements_statement[i], env);
+        result = Eval(p->Node_array[i], env);
         std::string type = result->which_object;
         if(type == ERROR_OBJ || type == RETURN_VALUE_OBJ)
             return result;
@@ -232,6 +247,14 @@ Object *newErrorIndex(std::string nodeType)
     return err;
 }
 
+Object *newNoValueFoundError(std::string nodeType)
+{
+    Object *err = new Object();
+    err->error_message = "Not settet key: " + nodeType+" in map!";
+    err->which_object = ERROR_OBJ;
+    return err;
+}
+
 Object *newErrorOutOfRange()
 {
     Object *err = new Object();
@@ -242,8 +265,8 @@ Object *newErrorOutOfRange()
 
 Object *evalArrayIndexExpression(Object *arr, Object *index)
 {
-    int indx = index->Value_int;
-    int max = arr->elements.size() -1;
+    long indx = (long)index->Value;
+    long max = arr->elements.size() -1;
 
     if(indx < 0 || indx > max)
     {
@@ -258,7 +281,8 @@ Object *evalArrayIndexExpression(Object *arr, Object *index)
 
 Object *evalHashLiteral(Node *node, MyEnv::Env *env)
 {
-    std::unordered_map<Object*, Object* > pairs;
+    Object *returnObj = new Object();
+    std::unordered_map<HashKeyClass, Object*, MyHashFunction> pairs;
     for(auto vk: node->Pairs)
     {
         Object *key = new Object();
@@ -272,23 +296,22 @@ Object *evalHashLiteral(Node *node, MyEnv::Env *env)
             std::cout << "unusabla as hash key !!! " << key->which_object << "\n";
         }
 
-        Object *value = new Object();
-        value = Eval(vk.second, env);
+        Object *value = Eval(vk.second, env);
+
         if(isError(value))
         {
             return value;
         }
-        Object *hashed = new Object();
-        hashed = HashKey(key);
 
         Object *hash_pair = new Object();
         hash_pair->Key = key;
-        hash_pair->Value_object = value;
+        hash_pair->which_object = value->which_object;
+        setValObj(hash_pair, value);
+    
+        pairs[GetHashKey(key)] = hash_pair;
 
-        pairs[hashed] = hash_pair;
     }
-
-    Object *returnObj = new Object();
+    
     returnObj->HashPair = pairs;
     returnObj->which_object = HASH_OBJ;
     return returnObj;
@@ -296,13 +319,13 @@ Object *evalHashLiteral(Node *node, MyEnv::Env *env)
 
 Object *evalHashIndexExpression(Object *left, Object* index)
 {
-    std::cout << left->which_object << "\n";
-    std::cout << index->which_object << "\n";
-
-    Object *myobj = HashKey(HashKey(index));
-    Object *retrn = left->HashPair[myobj];
-    return retrn->Value_object;
-    return left->HashPair[HashKey(index)]->Value_object;// sorunlu
+    HashKeyClass get = GetHashKey(index);
+    Object* devami = left->HashPair[get];
+    if(devami)
+    {
+        return (Object*) devami->Value;
+    }
+    return newNoValueFoundError((char *)index->Value);
 }
 
 Object *evalIndexExpression(Object *left, Object *index)
@@ -365,7 +388,7 @@ MyEnv::Env *extendedFunctionEnv(Object *fun, std::vector<Object *> args)
 Object *unwrapReturnValue(Object *obj)
 {
     if(obj->which_object == "ReturnValue")
-        return obj->Value_object;
+        return (Object *)obj->Value;
 
     return obj;
 }
@@ -399,7 +422,8 @@ Object *Eval(Node *p, MyEnv::Env *env)
                 return val;
             }
             Object *ret = new Object();
-            ret->Value_object = val;
+            //ret->Value_object = val;
+            setValObj(ret, val);
             ret->which_object = RETURN_VALUE_OBJ;
             return ret;
         }
@@ -434,7 +458,9 @@ Object *Eval(Node *p, MyEnv::Env *env)
         else if(p->which_identifier == "IntegerLiteral")
         {
             Object *integ = new Object();
-            integ->Value_int = p->Value_int;
+            long p_val = (long) p->Value_int;
+            setValLong(integ, p_val);
+            //integ->Value_int = p->Value_int;
             integ->which_object = INTEGER_OBJ;
             return integ;
         }
@@ -449,7 +475,7 @@ Object *Eval(Node *p, MyEnv::Env *env)
         else if(p->which_identifier == "FunctionLiteral")
         {
             Object *fun = new Object();
-            fun->parameters = p->Parameters_identifier;
+            fun->parameters = p->Node_array;
             fun->body = p->Body_statement;
             fun->which_object = FUNCTION_OBJ;
             fun->env = env;
@@ -459,14 +485,14 @@ Object *Eval(Node *p, MyEnv::Env *env)
         {
             if(builtin_functions[p->Function_identifier->Value])
             {
-                std::vector<Object *> args = evalExpressions(p->Arguments_identifier, env);
+                std::vector<Object *> args = evalExpressions(p->Node_array, env);
                 Object *returnObj = new Object(builtin_functions[p->Function_identifier->Value](args));
                 return returnObj;
             }
             Object *fun = Eval(p->Function_identifier, env);
             if(isError(fun))
                 return fun;
-            std::vector<Object *> args = evalExpressions(p->Arguments_identifier, env);
+            std::vector<Object *> args = evalExpressions(p->Node_array, env);
             if(args.size() == 1 && isError(args[0]))
             {
                 return args[0];
@@ -477,13 +503,13 @@ Object *Eval(Node *p, MyEnv::Env *env)
         else if(p->which_identifier == "StringLiteral")
         {
             Object *str = new Object();
-            str->Value_string = p->Value_string;
+            setValStr(str, p->Value_string);
             str->which_object = STRING_OBJ;
             return str;
         }
         else if(p->which_identifier == "ArrayLiteral")
         {
-            std::vector<Object *> elements = evalExpressions(p->Elements, env);
+            std::vector<Object *> elements = evalExpressions(p->Node_array, env);
             if(elements.size() == 1 && isError(elements[0]))
                 return elements[0];
             Object *arr = new Object();

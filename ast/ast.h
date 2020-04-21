@@ -21,11 +21,7 @@ class Node
         std::string which_statement;
         std::string Operator;
         std::unordered_map<Node*, Node*> Pairs;
-        std::vector<Node *> Parameters_identifier;
-        std::vector<Node *> Arguments_identifier;
-        std::vector<Node *> Statements_statement; 
-        std::vector<Node *> Statements_program; 
-        std::vector<Node *> Elements;
+        std::vector<Node *> Node_array;
         Node *Right_identifier;
         Node *Left_identifier;
         Node *Condition_identifier;

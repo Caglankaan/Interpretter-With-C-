@@ -204,7 +204,7 @@ Node *parseBlockStatement(Parser *p)
         Node *stmt = parseStatement(p); //NULL DÖNDÜ
         if(stmt != NULL)
         {
-            s->Statements_statement.push_back(stmt);
+            s->Node_array.push_back(stmt);
         }
         nextToken(p);
     }
@@ -318,7 +318,7 @@ Node parseFunctionLiteral(Parser *p)
         return identifier_null;
     }
 
-    i->Parameters_identifier = parseFunctionParameters(p);
+    i->Node_array = parseFunctionParameters(p);
 
     if(!expectPeek(p, LBRACE))
     {
@@ -335,7 +335,7 @@ Node parseCallExpression(Parser *p, Node *function)
     Node *i = new Node();
     i->token = p->curToken;
     i->Function_identifier = function;
-    i->Arguments_identifier = parseExpressionList(p, RPAREN);
+    i->Node_array = parseExpressionList(p, RPAREN);
     i->which_identifier = "CallExpression";
     i->node_type = "Identifier";
     return *i;
@@ -437,7 +437,7 @@ Node parseArrayLiteral(Parser *p)
     array->token = p->curToken;
     array->node_type = "Identifier";
     array->which_identifier = "ArrayLiteral";
-    array->Elements = parseExpressionList(p, RBRACKET);
+    array->Node_array = parseExpressionList(p, RBRACKET);
 
     return *array;
 }
@@ -683,7 +683,7 @@ Node *ParseProgram(Parser *p)
         Node *stmt = parseStatement(p);
         if(stmt != NULL)
         {
-            program->Statements_program.push_back(stmt);
+            program->Node_array.push_back(stmt);
         }
 
         nextToken(p);

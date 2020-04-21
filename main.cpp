@@ -61,5 +61,10 @@ Object builtinLenFunc(std::vector<Object *> arguments)
         {
             std::cout << "null" << "\n";
         }
+        else if(evaluated->which_object == "")
+        {
+            std::string return_str = evaluated->Inspect(evaluated);
+            std::cout <<"WHICH OBJECT EMPTY EGLDI: "<< return_str << "\n";
+        }
     }
 }
