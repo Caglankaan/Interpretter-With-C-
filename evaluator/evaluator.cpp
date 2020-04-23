@@ -80,6 +80,11 @@ Object *evalStringInfixExpression(std::string op, Object *left, Object *right)
     return str;
 }
 
+Object *evalBreakExpression()
+{
+
+}
+
 Object *evalIntegerInfixExpression(std::string op, Object *left, Object *right)
 {
 
@@ -180,17 +185,44 @@ Object *evalIfExpression(Node *if_expression, MyEnv::Env *env)
     return nullObject();
 }
 
+Object *evalWhileExpression(Node *while_expression, MyEnv::Env *env)
+{
+    Object *condition = Eval(while_expression->Condition_identifier, env);
+    if(isError(condition))
+        return condition;
+    if(isTruthy(condition))
+        return Eval(while_expression->Consequence_statement, env);
+   
+    return nullObject();
+}
+
 
 Object *evalProgram(Node *p, MyEnv::Env *env)
 {
     Object *result = new Object();
     for(int i = 0; i < p->Node_array.size(); i++)
     {
-        result = Eval(p->Node_array[i], env);
-        if(result->which_object == RETURN_VALUE_OBJ)
-            return (Object *)result->Value;
-        if(result->which_object == ERROR_OBJ)
-            return result;
+        if(p->Node_array[i]->which_statement == "WhileStatement")
+        {
+            while(1)
+            {
+                result = Eval(p->Node_array[i], env);
+                if(result->which_object == RETURN_VALUE_OBJ)
+                    return (Object *)result->Value;
+                if(result->which_object == ERROR_OBJ)
+                    return result;
+                if(result->which_object == BREAK_OBJ)
+                    break;
+            }
+        }
+        else
+        {
+             result = Eval(p->Node_array[i], env);
+            if(result->which_object == RETURN_VALUE_OBJ)
+                return (Object *)result->Value;
+            if(result->which_object == ERROR_OBJ)
+                return result;
+        }
     }
     return result;
 }
@@ -408,10 +440,10 @@ Object *Eval(Node *p, MyEnv::Env *env)
 {
     if(p->node_type == "Statement")
     {
-        if(p->which_statement == "ExpressionStatement")
+        if(p->which_statement == "ExpressionStatement" || p->which_statement == "WhileStatement")
             return Eval(p->Expression_identifier, env);
         else if(p->which_statement == "BlockStatement")
-        {
+        { 
             return evalBlockStatement(p, env);
         }
         else if(p->which_statement == "ReturnStatement")
@@ -433,6 +465,15 @@ Object *Eval(Node *p, MyEnv::Env *env)
             if(isError(val))
                 return val;
             env->setObject(p->Name_identifier->Value, val, env);
+        }
+        else if(p->which_statement == "BreakStatement")
+        {
+            Object *break_obj = new Object();
+            break_obj->which_object = BREAK_OBJ;
+            return break_obj;
+        }
+        else{
+            std::cout << "p->whixh_identişfier? : " << p->which_identifier<<"\n";
         }
     }
     else if(p->node_type == "Identifier")
@@ -471,6 +512,10 @@ Object *Eval(Node *p, MyEnv::Env *env)
         else if(p->which_identifier == "IfExpression")
         {
             return evalIfExpression(p, env);
+        }
+        else if(p->which_identifier == "WhileExpression")
+        {
+            return evalWhileExpression(p, env);
         }
         else if(p->which_identifier == "FunctionLiteral")
         {

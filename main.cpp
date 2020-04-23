@@ -35,6 +35,11 @@ Object builtinLenFunc(std::vector<Object *> arguments)
     pushFuncPtr = &builtinPushFunc;
     registerBuiltinFunctions("push", pushFuncPtr);
 
+
+    Object (*printFuncPtr)(std::vector<Object *> arguments);
+    printFuncPtr = &builtinPrintFunc;
+    registerBuiltinFunctions("print", printFuncPtr);
+
     MyEnv::Env *env = MyEnv::newEnv();
     while(true)
     {
@@ -50,6 +55,7 @@ Object builtinLenFunc(std::vector<Object *> arguments)
             printParserErrors(p->errors);
             continue;
         }
+
         Object *evaluated = Eval(program, env);
         if(evaluated->which_object == STRING_OBJ || evaluated->which_object == INTEGER_OBJ || evaluated->which_object == RETURN_VALUE_OBJ
         || evaluated->which_object == ERROR_OBJ || evaluated->which_object == BOOLEAN_OBJ || evaluated->which_object == ARRAY_OBJ)
@@ -64,7 +70,7 @@ Object builtinLenFunc(std::vector<Object *> arguments)
         else if(evaluated->which_object == "")
         {
             std::string return_str = evaluated->Inspect(evaluated);
-            std::cout <<"WHICH OBJECT EMPTY EGLDI: "<< return_str << "\n";
+            //std::cout <<"WHICH OBJECT EMPTY EGLDI: "<< return_str << "\n";
         }
     }
 }

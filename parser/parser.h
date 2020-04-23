@@ -47,6 +47,7 @@ Node *parseExpressionStatement(Parser *p);
 Node *parseReturnStatement(Parser *p);
 Node *parseBlockStatement(Parser *p);
 
+Node parseWhileExpression(Parser *p);
 Node parseIfExpression(Parser *p);
 Node parseFunctionLiteral(Parser *p);
 Node parseGroupExpression(Parser *p);

@@ -45,6 +45,8 @@
 #define IF "IF"
 #define ELSE "ELSE"
 #define RETURN "RETURN"
+#define WHILE "WHILE"
+#define BREAK "BREAK"
 
 #define STRING "STRING"
 

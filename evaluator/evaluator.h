@@ -15,6 +15,7 @@ Object *evalIntegerInfixExpression(std::string op, Object *left, Object *right);
 Object *evalInfixExpression(std::string op, Object *left, Object *right);
 Object *evalPrefixExpression(std::string op, Object *right);
 Object *evalIfExpression(Node *if_expression, MyEnv::Env *env);
+Object *evalWhileExpression(Node *while_expression, MyEnv::Env *env);
 Object *evalProgram(Node *p, MyEnv::Env *env);
 Object *evalBlockStatement(Node *p, MyEnv::Env *env);
 Object *evalHashLiteral(Node *p, MyEnv::Env *env);

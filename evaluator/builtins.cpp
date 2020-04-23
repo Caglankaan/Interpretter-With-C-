@@ -99,3 +99,29 @@ Object builtinPushFunc(std::vector<Object *> arguments)
     }
     
 }
+
+Object builtinPrintFunc(std::vector<Object *> arguments)
+{
+    
+    for(auto &arg: arguments)
+    {
+        if(arg->which_object == STRING_OBJ)
+        {
+            std::cout << (char *)arg->Value;
+        }
+        else if(arg->which_object == INTEGER_OBJ)
+        {
+            std::cout << (long)arg->Value;
+        }
+        else if(arg->which_object == BOOLEAN_OBJ)
+        {
+            std::cout << (bool)arg->Value;
+        }
+        else
+        {
+            std::cout << arg->Inspect(arg);
+        }
+    }
+    std::cout << "\n";
+    
+}

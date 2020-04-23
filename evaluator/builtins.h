@@ -11,5 +11,6 @@ void registerBuiltinFunctions(std::string func_name, std::function<Object(std::v
 
 Object builtinLenFunc(std::vector<Object *> arguments);
 Object builtinPushFunc(std::vector<Object *> arguments);
+Object builtinPrintFunc(std::vector<Object *> arguments);
 
 #endif

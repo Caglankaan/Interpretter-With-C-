@@ -7,7 +7,9 @@ std::unordered_map<std::string, TokenType> keywords({
         {"false", FALSE},
         {"if", IF},
         {"else", ELSE},
-        {"return", RETURN}
+        {"return", RETURN},
+        {"while", WHILE},
+        {"break", BREAK}
     });
 
 TokenType LookupIdent(std::string ident)

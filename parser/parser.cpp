@@ -261,6 +261,42 @@ Node parseIfExpression(Parser *p)
     return *i;
 }
 
+Node parseWhileExpression(Parser *p)
+{
+    Node *i = new Node();
+    i->token = p->curToken;
+
+    Node identifier_null;
+    Node *id = &identifier_null;
+    id = NULL;
+    
+    if(!expectPeek(p, LPAREN))
+    {
+        return identifier_null;
+    }
+
+    nextToken(p);
+    Node *condition = new Node(parseExpression(p, LOWEST));
+    i->Condition_identifier = condition;
+
+    if(!expectPeek(p, RPAREN))
+    {
+        return identifier_null;
+    }
+
+    if(!expectPeek(p, LBRACE))
+    {
+        return identifier_null;
+    }
+
+    //Node *consequence = new Node(parseBlockStatement(p));
+    i->Consequence_statement = parseBlockStatement(p);
+
+    i->which_identifier = "WhileExpression";
+    i->node_type = "Identifier";
+    return *i;
+}
+
 std::vector<Node*> parseFunctionParameters(Parser *p)
 {
     std::vector<Node *> params;
@@ -504,6 +540,7 @@ Parser *New(Lexer *l)
     Node (*parseInfixExpressionPtr)(Parser *p, Node *left);
     Node (*parseGroupExpressionPtr)(Parser *p);
     Node (*parseIfExpressionPtr)(Parser *p);
+    Node (*parseWhileExpressionPtr)(Parser *p);
     Node (*parseFunctionLiteralPtr)(Parser *p);
     Node (*parseCallExpressionPtr)(Parser *p, Node *function);
     Node (*parseStringLiteralPtr)(Parser *p);
@@ -517,7 +554,8 @@ Parser *New(Lexer *l)
     parseInfixExpressionPtr = &parseInfixExpression;
     parseBooleanPtr = &parseBoolean;
     parseGroupExpressionPtr = &parseGroupExpression;
-    parseIfExpressionPtr=  &parseIfExpression;
+    parseIfExpressionPtr =  &parseIfExpression;
+    parseWhileExpressionPtr =  &parseWhileExpression;
     parseFunctionLiteralPtr = &parseFunctionLiteral;
     parseCallExpressionPtr = &parseCallExpression;
     parseStringLiteralPtr = &parseStringLiteral;
@@ -534,6 +572,7 @@ Parser *New(Lexer *l)
 	registerPrefix(p,FALSE, parseBooleanPtr);
     registerPrefix(p, LPAREN, parseGroupExpressionPtr);
     registerPrefix(p, IF, parseIfExpressionPtr);
+    registerPrefix(p, WHILE, parseWhileExpressionPtr);
     registerPrefix(p, FUNCTION, parseFunctionLiteralPtr);
     registerPrefix(p, STRING, parseStringLiteralPtr);
     registerPrefix(p, LBRACKET, parseArrayLiteralPtr);
@@ -580,6 +619,8 @@ Node *parseReturnStatement(Parser *p)
     stmt->node_type = "Statement";
     return stmt;
 }
+
+
 
 Node *parseExpressionStatement(Parser *p)
 {
@@ -657,6 +698,29 @@ Node *parseStatement(Parser *p)
             stmt->node_type = "Statement";
         }
 
+        return stmt;
+    }
+    else if(p->curToken.Type == WHILE)
+    {
+        Node *stmt = new Node();
+        stmt = parseExpressionStatement(p);
+        if(stmt != NULL)
+        {
+            stmt->which_statement = "WhileStatement";
+            stmt->node_type = "Statement";
+        }
+        return stmt;
+    }
+    else if(p->curToken.Type == BREAK)
+    {
+        Node *stmt = new Node();
+        stmt->token = p->curToken;
+        if(peekTokenIs(p, SEMICOLON))
+        {
+            nextToken(p);
+        }
+        stmt->which_statement = "BreakStatement";
+        stmt->node_type = "Statement";
         return stmt;
     }
     else

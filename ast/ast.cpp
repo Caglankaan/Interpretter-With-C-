@@ -38,6 +38,10 @@ std::string Node::String()
 
             return return_if;
         }
+        else if(which_identifier == "WhileExpression")
+        {
+            return "while" + Condition_identifier->String() + " " + Consequence_statement->String();
+        }
         else if(which_identifier == "FunctionLiteral")
         {
             std::string output_str = TokenLiteral()+"(";
