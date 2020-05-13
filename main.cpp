@@ -70,7 +70,17 @@ Object builtinLenFunc(std::vector<Object *> arguments)
         else if(evaluated->which_object == "")
         {
             std::string return_str = evaluated->Inspect(evaluated);
-            //std::cout <<"WHICH OBJECT EMPTY EGLDI: "<< return_str << "\n";
+            std::cout <<"WHICH OBJECT EMPTY EGLDI: "<< return_str << "\n";
         }
+
+    
+        free(l);
+        free(p);
     }
 }
+
+
+//while (true){print("x is: ", x); let x = x + 1; if(x == 2000000){break;}}
+//while (true){print("x is: ",x)} yine memory hayvan gibi kullaniyor
+
+//let factorial = fn(n) { if (n == 0) { 1 } else { n * factorial(n - 1) } };

@@ -61,8 +61,8 @@ bool expectPeek(Parser *p, TokenType t)
 
 Node parseInteger(Parser *p)
 {
-    Node *lit = new Node();
-    lit->token = p->curToken;
+    Node lit;
+    lit.token = p->curToken;
     int value;
     try
     {
@@ -73,10 +73,10 @@ Node parseInteger(Parser *p)
         std::cerr << e.what() << '\n';
     }
     
-    lit->Value_int = value;
-    lit->node_type = "Identifier";
-    lit->which_identifier = "IntegerLiteral";
-    return *lit;
+    lit.Value_int = value;
+    lit.node_type = "Identifier";
+    lit.which_identifier = "IntegerLiteral";
+    return lit;
 }
 
 void noPrefixParseFnError(Parser *p, TokenType t)
@@ -86,11 +86,11 @@ void noPrefixParseFnError(Parser *p, TokenType t)
 
 Node parseIdentifier(Parser *p)
 {
-    Node *i = new Node();
-    i->token = p->curToken;
-    i->Value = p->curToken.Literal;
-    i->node_type = "Identifier";
-    return *i;
+    Node i;
+    i.token = p->curToken;
+    i.Value = p->curToken.Literal;
+    i.node_type = "Identifier";
+    return i;
 }
 
 Node parseExpression(Parser *p, int precedence)
@@ -135,61 +135,55 @@ Node parseExpression(Parser *p, int precedence)
 
 Node parsePrefixExpression(Parser *p)
 {
-    Node *i = new Node();
-    i->token = p->curToken;
-    i->Operator = p->curToken.Type;
+    Node i;
+    i.token = p->curToken;
+    i.Operator = p->curToken.Type;
     
     nextToken(p);
 
-    i->Right_identifier = new Node(parseExpression(p, PREFIX));
-    i->which_identifier = "PrefixExpression";
-    i->node_type = "Identifier";
-    return *i;
+    i.Right_identifier = new Node(parseExpression(p, PREFIX));
+    i.which_identifier = "PrefixExpression";
+    i.node_type = "Identifier";
+    return i;
 }
 
 Node parseInfixExpression(Parser *p, Node *left)
 {
-   Node *i = new Node();
-    i->token = p->curToken;
-    i->Operator = p->curToken.Type;
+    Node i;
+    i.token = p->curToken;
+    i.Operator = p->curToken.Type;
 
-    i->Left_identifier = left;
+    i.Left_identifier = left;
     
     int precedence = curPrecedence(p);
     nextToken(p);
-    /*if(i->Operator == "+")
-        i->Right = new Identifier(parseExpression(p, precedence-1));
-    else
-    */
-    i->Right_identifier = new Node(parseExpression(p, precedence));
-    i->which_identifier = "InfixExpression";
-    i->node_type = "Identifier";
-    return *i;
+    
+    i.Right_identifier = new Node(parseExpression(p, precedence));
+    i.which_identifier = "InfixExpression";
+    i.node_type = "Identifier";
+    return i;
 }
 
 Node parseBoolean(Parser *p)
 {
-    Node *i = new Node();
-    i->token = p->curToken;
-    i->Value_bool = curTokenIs(p, TRUE);
-    i->node_type = "Boolean";
-    i->which_identifier = "Boolean";
-    return *i;
+    Node i;
+    i.token = p->curToken;
+    i.Value_bool = curTokenIs(p, TRUE);
+    i.node_type = "Boolean";
+    i.which_identifier = "Boolean";
+    return i;
 }
 
 Node parseGroupExpression(Parser *p)
 {
     nextToken(p);
 
-    Node i = parseExpression(p,LOWEST);
-    //i.which_identifier = "PrefixExpression";
-
     if(!expectPeek(p, RPAREN))
     {
         Node *identifier_null = new Node();
         return *identifier_null;
     }
-    return i;
+    return parseExpression(p,LOWEST);
 }
 
 Node *parseBlockStatement(Parser *p)
@@ -205,6 +199,7 @@ Node *parseBlockStatement(Parser *p)
         if(stmt != NULL)
         {
             s->Node_array.push_back(stmt);
+
         }
         nextToken(p);
     }
@@ -255,6 +250,7 @@ Node parseIfExpression(Parser *p)
         }
         i->Alternative_statement = parseBlockStatement(p);
     }
+    free(id);
 
     i->which_identifier = "IfExpression";
     i->node_type = "Identifier";
@@ -289,7 +285,7 @@ Node parseWhileExpression(Parser *p)
         return identifier_null;
     }
 
-    //Node *consequence = new Node(parseBlockStatement(p));
+    free(id);
     i->Consequence_statement = parseBlockStatement(p);
 
     i->which_identifier = "WhileExpression";
@@ -342,8 +338,8 @@ std::vector<Node*> parseFunctionParameters(Parser *p)
 
 Node parseFunctionLiteral(Parser *p)
 {
-    Node *i = new Node();
-    i->token = p->curToken;
+    Node i ;
+    i.token = p->curToken;
 
     Node identifier_null;
     Node *id = &identifier_null;
@@ -354,16 +350,17 @@ Node parseFunctionLiteral(Parser *p)
         return identifier_null;
     }
 
-    i->Node_array = parseFunctionParameters(p);
+    i.Node_array = parseFunctionParameters(p);
 
     if(!expectPeek(p, LBRACE))
     {
         return identifier_null;
     }
-    i->Body_statement = parseBlockStatement(p);
-    i->which_identifier = "FunctionLiteral";
-    i->node_type = "Identifier";
-    return *i;
+    i.Body_statement = parseBlockStatement(p);
+    i.which_identifier = "FunctionLiteral";
+    i.node_type = "Identifier";
+    free(id);
+    return i;
 }
 
 Node parseCallExpression(Parser *p, Node *function)
@@ -749,6 +746,7 @@ Node *ParseProgram(Parser *p)
         {
             program->Node_array.push_back(stmt);
         }
+        free(stmt);
 
         nextToken(p);
     }

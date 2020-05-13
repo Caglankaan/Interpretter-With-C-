@@ -9,7 +9,7 @@ Object builtinLenFunc(std::vector<Object *> arguments)
 {
     if(arguments.size() != 1)
     {
-        std::cout << "verdiğin parametre sayisi 1 degil yapcagin isi sikim\n";
+        std::cout << "verdiğin parametre sayisi 1 degil\n";
     }
     else
     {
@@ -44,13 +44,13 @@ Object builtinPushFunc(std::vector<Object *> arguments)
 {
     if(arguments.size() != 2)
     {
-        std::cout << "verdigin parametre sayisi 2 degil yapcagin isi sikim(array ve eleman ver)\n";
+        std::cout << "verdigin parametre sayisi 2 degil(array ve eleman ver)\n";
     }
     else
     {
         if(arguments[0]->which_object != ARRAY_OBJ)
         {
-            std::cout << "verdigin ilk parametre array degil yapcagin isi sikim\n";
+            std::cout << "verdigin ilk parametre array degil\n";
         }
         else
         {
@@ -91,7 +91,7 @@ Object builtinPushFunc(std::vector<Object *> arguments)
             }
             else
             {
-                std::cout << "verdigin 2. parametre ne amınakoyim string array int yada bool degil yapcagin isi sikim\n";
+                std::cout << "verdigin 2. parametre ne kardes string array int yada bool degil\n";
             }
             
         }
@@ -123,5 +123,10 @@ Object builtinPrintFunc(std::vector<Object *> arguments)
         }
     }
     std::cout << "\n";
+
+    /*for(auto arg: arguments)
+        delete arg;
+    */
+    arguments.clear();
     
 }

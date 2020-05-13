@@ -72,6 +72,23 @@ std::string Object::Inspect(Object *o)
     
 }
 
+Object::~Object()
+{
+    delete body;
+    delete env;
+    delete Key;
+    for(auto elem: elements)
+        delete elem;
+    for(auto vk: HashPair)
+        delete vk.second;
+    for(auto param: parameters)
+        delete param;
+    delete Value;
+    parameters.clear();
+    elements.clear();
+    HashPair.clear();
+}
+
 HashKeyClass GetHashKey(Object *key)
 {
     

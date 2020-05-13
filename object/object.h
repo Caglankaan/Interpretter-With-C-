@@ -52,6 +52,7 @@ class MyHashFunction
 class Object
 {
     public:
+        ~Object();
         std::string which_object;
         std::string error_message;
         void *Value;
